@@ -6,5 +6,12 @@
 /src/auth/__init__.py
 /src/config/__init__.py
 /src/core/__init__.py
+/src/schemas/__pycache__
+/src/models/__pycache__
+/src/auth/__pycache__
+/src/config/__pycache__
+/src/core/__pycache__
 /tests/__init__.py
 /src/__init__.py
+/logs.txt
+
