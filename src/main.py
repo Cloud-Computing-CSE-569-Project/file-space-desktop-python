@@ -1,6 +1,7 @@
 from auth.auth import Auth
 import json
 import sys, os
+from core.watcher import Watcher
 
 
 sync_folder_name = "My Space"
@@ -17,11 +18,11 @@ def create_folder(path:str):
     os.chdir("/home/"+user_name)
 
     if sync_folder_name not in os.listdir():
-        print("Creating Sync Folder...")
+        print("Creating Sync Folder Locally...")
         os.mkdir(sync_folder_name)
         print("Your Folder has been created")
     else:
-        print("Folder found " + sync_folder_path)
+        print("Your sync folder is " + sync_folder_path)
 
 def show_user_details():
     atts = []
@@ -47,11 +48,10 @@ def show_login_menu():
 
 if __name__ == "__main__":
     print("Welcome To File Space") 
-
+    my_watcher = Watcher(sync_folder_path = sync_folder_path)
     while not is_logged:
         show_login_menu()
 
     if is_logged:
-     
-    
         create_folder(path="")
+        my_watcher.start_sync()
