@@ -52,7 +52,7 @@ def show_login_menu():
 if __name__ == "__main__":
     print("Welcome To File Space")
     my_indexer = Indexer()
-    my_watcher = Watcher(sync_folder_path=sync_folder_path, indexer=my_indexer)
+    my_watcher = Watcher(sync_folder_path=sync_folder_path, indexer=my_indexer, bucket_name="file-storage-global113245-dev")
 
     while not is_logged:
         show_login_menu()

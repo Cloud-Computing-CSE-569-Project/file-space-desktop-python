@@ -16,3 +16,4 @@ class Services:
     dynamodb = boto3.resource("dynamodb", config=configuration)
     cognito = boto3.client("cognito-idp")
     cognito_id = boto3.client("cognito-identity")
+    s3 = boto3.resource("s3")
