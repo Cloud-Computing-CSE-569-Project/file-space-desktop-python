@@ -11,6 +11,7 @@ configuration = bt.config.Config(
     retries={"max_attempts": 10, "mode": "standard"},
 )
 
+
 class Services:
     dynamodb = boto3.resource("dynamodb", config=configuration)
     cognito = boto3.client("cognito-idp")
