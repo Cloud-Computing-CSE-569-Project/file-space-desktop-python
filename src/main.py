@@ -15,7 +15,6 @@ sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 
 logs = "logs.txt"
 
-
 def create_folder(sync_folder: str):
 
     os.chdir("/home/" + user_name)
@@ -30,80 +29,62 @@ def create_folder(sync_folder: str):
 
         try:
 
-            Services.s3.put_object(
-                Bucket="file-storage-global113245-dev",
-                Key="sync_folders/" + sync_folder + "/",
+            Services.s3.Bucket(Services.bucket_name).put_object(
+                Key="sync_folders/" + sync_folder + "/"
             )
             print("Folder Created on the Cloud - You can access via your phone")
         except Exception as e:
             print(e)
         
         print("Creating Database....")
-        connector = DBConnector()
-        connector.create_table()
+        db.create_table()
     
     else:
         print("Your sync folder is " + sync_folder_path)
 
 
-def show_user_details():
-    atts = []
-
-    with open(logs, "r") as user:
-        data = eval(user.read())
-        return data
-
 
 def show_login_menu():
-    f = open(logs, "r+")
     print("You need to login")
 
     email = input("Enter Email: ")
     password = input("Enter Password:")
     auth = Auth()
 
-    user = auth.login(email=email, password=password)
-
-    if "Username" in user.keys():
-        f.write(str(user))
-        f.close()
+    token = auth.login(email=email, password=password)
+    
+    print(token)
+    if token == "":
+      return False
     return True
 
 
 if __name__ == "__main__":
-
+    db = DBConnector()
+    db.create_login_table()
     print("Welcome To File Space")
     my_indexer = Indexer()
 
-    f = open(logs, "r")
-    is_logged = len(list(f.readlines())) != 0
-    print(is_logged)
-
+    logins = db.fetch_logins()
+    is_logged = len(logins) != 0
+   
     while not is_logged:
         is_logged = show_login_menu()
 
-    print("Logged")
+    token = logins[0][-1]
     if is_logged:
-        user_details = show_user_details()
-        user_id = user_details["Username"]
-        name = [
-            name["Value"]
-            for name in user_details["UserAttributes"]
-            if name["Name"] == "name"
-        ]
-        sync_folder_name_cloud = user_id
-        print("Welcome " + name[0])
+        
+        
+        user_details = Auth().get_user_info(token=token)
+        sync_folder_name_cloud = user_details["sync_folder_name"]
+        print("Welcome " + user_details["name"])
 
         my_watcher = Watcher(
             sync_folder_path=sync_folder_path,
             indexer=my_indexer,
             user_sync_folder=sync_folder_name_cloud,
         )
-        create_folder(sync_folder=user_id)
+        create_folder(sync_folder= sync_folder_name_cloud) 
         my_watcher.start_sync()
 
-        """ bucket = Services.s3.Bucket(Services.bucket_name)
-        for obj in bucket.objects.filter(Prefix="sync_folders/{0}".format(user_id)):
-            print(obj.owner) """
 
-    f.close()
