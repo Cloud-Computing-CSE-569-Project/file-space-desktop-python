@@ -1,12 +1,11 @@
 from models.event import SyncEvent
 
-
 class Indexer:
     def event_handler(self, event: SyncEvent):
         if event is SyncEvent.deleted:
             self._event_delete()
         elif event is SyncEvent.created:
-            self._event_created()
+            self._event_create()
         elif event is SyncEvent.updated:
             self._event_update()
         else:
