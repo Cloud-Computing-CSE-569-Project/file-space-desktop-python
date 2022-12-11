@@ -26,73 +26,10 @@ class Watcher:
         self.remote_thread = SyncRemote()
         self.local_thread = SyncLocal()
 
-    def _start_sync_local(self):
-        os.chdir(self.sync_folder_path)
     
-        db = DBConnector()
-        while True:
-            files_local = [file_db[1] for file_db in db.fetch_all()]
-            
-
-            cloud_files = [
-                file.key.split("/")[-1]
-                for file in self.bucket.objects.filter(
-                    Prefix="sync_folders/" + self.user_sync_folder + "/"
-                )
-            ]
-            print(cloud_files)
-            for file in os.listdir():
-
-                if file not in files_local:
-                    
-                    if file not in cloud_files and os.path.isfile(file):
-                        
-                        db.update(name=file, version=str("first"))
-                        change_kind = SyncEvent(2)
-                    else:
-                        change_kind = SyncEvent(3)
-                else:
-                    print("No")
-                    change_kind = SyncEvent(4)
-
-                self.indexer.event_handler(change_kind)
-
-                print("Monitoring " + self.sync_folder_path)
-               
-                sleep(1)  # wait a sec!
-
-    def _start_sync_remote(self):
-       
-        db = DBConnector()
-        while True:
-            files_local = [file_db[1] for file_db in db.fetch_all()]
-            
-            cloud_files = [
-                file.key.split("/")[-1]
-                for file in self.bucket.objects.filter(
-                    Prefix="sync_folders/" + self.user_sync_folder + "/"
-                )
-            ]
-            
-            for remote_file in cloud_files:
-
-                if remote_file in files_local:
-                   pass
-                else:
-                    print("I am going to download this " + remote_file)
-               
-                sleep(1)  # wait a sec!
-
     def start_sync(
         self,
     ):
-        """ thread_local = Thread(target=self._start_sync_local)
-        thread_remote = Thread(target=self._start_sync_remote)
-        thread_local.run()
-        thread_remote.run()
-
-        thread_remote.join()
-        thread_local.join() """
         self.local_thread.start()
         self.remote_thread.start()
 
@@ -132,7 +69,7 @@ class SyncLocal(Thread):
                     Prefix="sync_folders/" + user["sync_folder_name"] + "/"
                 )
             ]
-            print(cloud_files)
+            
             for file in os.listdir():
 
                 if file not in files_local:
@@ -177,8 +114,20 @@ class SyncRemote(Thread):
                 if remote_file in files_local:
                    pass
                 else:
-                    print("I am going to download this " + remote_file)
+                    if remote_file != "":
+                        pass
+                        print("I am going to download this " + remote_file)
+                        self._download_thread(key=remote_file)
                
                 sleep(1)  # wait a sec!
     def run(self):
        self._sync_file_remote()
+    
+    def _download(self, key):
+        for i in range(100):
+            print("Downloading {0}".format(key), i, end=" ")
+            
+    def _download_thread(self, key):
+        thread = Thread(target=self._download, args=[key]) 
+        thread.run()
+        

@@ -13,8 +13,6 @@ user_name = os.getlogin()
 
 sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 
-logs = "logs.txt"
-
 def create_folder(sync_folder: str):
 
     os.chdir("/home/" + user_name)
@@ -71,10 +69,9 @@ if __name__ == "__main__":
     while not is_logged:
         is_logged = show_login_menu()
 
-    token = logins[0][-1]
     if is_logged:
         
-        
+        token = logins[0][-1]
         user_details = Auth().get_user_info(token=token)
         sync_folder_name_cloud = user_details["sync_folder_name"]
         print("Welcome " + user_details["name"])
@@ -85,6 +82,7 @@ if __name__ == "__main__":
             user_sync_folder=sync_folder_name_cloud,
         )
         create_folder(sync_folder= sync_folder_name_cloud) 
+        print(user_details)
         my_watcher.start_sync()
 
 
