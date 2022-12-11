@@ -11,6 +11,7 @@ CLIENT_SECRET = os.getenv("DESKTOP_CLIENT_SECRET")
 IDENTITY_POOL_ID = os.getenv("IDENTITY_POOL_ID")
 BUCKET_ID = os.getenv("BUCKET_ID")
 
+
 class Auth:
     def login(self, email: str, password: str):
         try:
@@ -36,21 +37,21 @@ class Auth:
 
     def get_user_info(self, token):
         user = Services.cognito.get_user(AccessToken=token)
-        
+
         return {
             "sync_folder_name": user["Username"],
-            "name": [attr["Value"] for attr in user["UserAttributes"] if attr["Name"] == "name"][0],
-
+            "name": [
+                attr["Value"]
+                for attr in user["UserAttributes"]
+                if attr["Name"] == "name"
+            ][0],
         }
+
     def _save_login(self, token):
         db = DBConnector()
 
         user = Services.cognito.get_user(AccessToken=token)
-        login_details = Login(
-            username=user["Username"],
-            access_token= token
-        )
+
+        login_details = Login(username=user["Username"], access_token=token)
 
         print("Login ", db.create_login(login_details))
-
-       

@@ -1,24 +1,25 @@
 import sqlite3
 from models.login import Login
 
+
 class DBConnector:
     def __init__(self):
         self.connection = sqlite3.connect("/tmp/sql.db")
         self._init_connection()
+
     def _init_connection(self):
 
         try:
 
             cursor = self.connection.cursor()
-           
-            result = cursor.fetchall()
-            
 
-            #cursor.close()
+            result = cursor.fetchall()
+
+            # cursor.close()
 
         except Exception as e:
             print(e)
-       
+
     def create_table(self):
 
         # cursor object
@@ -38,7 +39,7 @@ class DBConnector:
         self._close()
 
     def create_login_table(self):
-         # cursor object
+        # cursor object
         cursor_obj = self.connection.cursor()
 
         table = """ CREATE TABLE if not exists logins (
@@ -49,29 +50,35 @@ class DBConnector:
 
         cursor_obj.execute(table)
 
-
     def _close(self):
         self.connection.close()
-    
-    def update(self, name:str, version:str):
+
+    def update(self, name: str, version: str):
         cursor = self.connection.cursor()
-        cursor.execute("""Insert into Files(name, version) values('{0}', '{1}')""".format(name, version))
+        cursor.execute(
+            """Insert into Files(name, version) values('{0}', '{1}')""".format(
+                name, version
+            )
+        )
         self.connection.commit()
 
-    def create_login(self, data:Login):
+    def create_login(self, data: Login):
         cursor = self.connection.cursor()
-        
-        query = """ Insert into logins(username, isLogged, accessToken) values ('{0}','{1}', '{2}')""".format(data.username, data.is_logged, data.access_token)
+
+        query = """ Insert into logins(username, isLogged, accessToken) values ('{0}','{1}', '{2}')""".format(
+            data.username, data.is_logged, data.access_token
+        )
 
         cursor.execute(query)
         self.connection.commit()
-        
+
         return cursor.lastrowid
 
     def fetch_logins(self):
         cursor = self.connection.cursor()
         cursor.execute("""SELECT * FROM logins;""")
         return cursor.fetchall()
+
     def fetch_files(self):
         cursor = self.connection.cursor()
         cursor.execute("""SELECT * FROM Files;""")

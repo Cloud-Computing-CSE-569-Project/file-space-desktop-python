@@ -1,5 +1,6 @@
 from models.event import SyncEvent
 
+
 class Indexer:
     def event_handler(self, event: SyncEvent):
         if event is SyncEvent.deleted:

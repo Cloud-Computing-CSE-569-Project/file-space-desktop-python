@@ -16,8 +16,9 @@ sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 bucket = Services.s3.Bucket(Services.bucket_name)
 
 indexer = Indexer()
-class Watcher:
 
+
+class Watcher:
     def __init__(self, sync_folder_path: str, indexer: Indexer, user_sync_folder: str):
         self.sync_folder_path = sync_folder_path
         self.indexer = indexer
@@ -26,7 +27,6 @@ class Watcher:
         self.remote_thread = SyncRemote()
         self.local_thread = SyncLocal()
 
-    
     def start_sync(
         self,
     ):
@@ -53,29 +53,29 @@ class Watcher:
         print(files_on_cloud)
         pool.starmap(self._sync, files_on_cloud)
 
+
 class SyncLocal(Thread):
-    
     def run(self):
-        
+
         db = DBConnector()
         user = Auth().get_user_info(token=db.fetch_logins()[0][-1])
         os.chdir(sync_folder_path)
         while True:
             files_local = [file_db[1] for file_db in db.fetch_files()]
-            
+
             cloud_files = [
                 file.key.split("/")[-1]
                 for file in bucket.objects.filter(
                     Prefix="sync_folders/" + user["sync_folder_name"] + "/"
                 )
             ]
-            
+
             for file in os.listdir():
 
                 if file not in files_local:
-                    
+
                     if file not in cloud_files and os.path.isfile(file):
-                        
+
                         db.update(name=file, version=str("first"))
                         change_kind = SyncEvent(2)
                     else:
@@ -84,50 +84,48 @@ class SyncLocal(Thread):
                     print("No")
                     change_kind = SyncEvent(4)
 
-                
                 indexer.event_handler(change_kind)
                 print("Monitoring " + sync_folder_path)
-               
-                sleep(1)  # wait a sec!
 
+                sleep(1)  # wait a sec!
 
             sleep(1)
 
-class SyncRemote(Thread):
 
+class SyncRemote(Thread):
     def _sync_file_remote(self):
 
         db = DBConnector()
         user = Auth().get_user_info(token=db.fetch_logins()[0][-1])
         while True:
             files_local = [file_db[1] for file_db in db.fetch_files()]
-            
+
             cloud_files = [
                 file.key.split("/")[-1]
                 for file in bucket.objects.filter(
                     Prefix="sync_folders/" + user["sync_folder_name"] + "/"
                 )
             ]
-            
+
             for remote_file in cloud_files:
 
                 if remote_file in files_local:
-                   pass
+                    pass
                 else:
                     if remote_file != "":
                         pass
                         print("I am going to download this " + remote_file)
                         self._download_thread(key=remote_file)
-               
+
                 sleep(1)  # wait a sec!
+
     def run(self):
-       self._sync_file_remote()
-    
+        self._sync_file_remote()
+
     def _download(self, key):
         for i in range(100):
             print("Downloading {0}".format(key), i, end=" ")
-            
+
     def _download_thread(self, key):
-        thread = Thread(target=self._download, args=[key]) 
+        thread = Thread(target=self._download, args=[key])
         thread.run()
-        

@@ -13,12 +13,13 @@ user_name = os.getlogin()
 
 sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 
-def create_folder(sync_folder: str):
+
+def create_folder(sync_folder: str, token: str):
 
     os.chdir("/home/" + user_name)
 
     if sync_folder_name not in os.listdir():
-     
+
         print("Creating Sync Folder Locally...")
         os.mkdir(sync_folder_name)
         print("Your Folder has been created")
@@ -30,16 +31,33 @@ def create_folder(sync_folder: str):
             Services.s3.Bucket(Services.bucket_name).put_object(
                 Key="sync_folders/" + sync_folder + "/"
             )
-            print("Folder Created on the Cloud - You can access via your phone")
+            print("Folder Created on the Cloud")
+
+          
         except Exception as e:
             print(e)
-        
+
         print("Creating Database....")
         db.create_table()
-    
+
+
+        attr = {
+            "device": user_name,
+            "sync_folder": sync_folder
+        }
+
+        update = str(attr)
+        response = Services.cognito.update_user_attributes(
+                UserAttributes=[
+                    {
+                        "Name": "custom:desktop",
+                        "Value": update
+                    },
+                ],
+                AccessToken=token,
+            )
     else:
         print("Your sync folder is " + sync_folder_path)
-
 
 
 def show_login_menu():
@@ -50,10 +68,10 @@ def show_login_menu():
     auth = Auth()
 
     token = auth.login(email=email, password=password)
-    
+
     print(token)
     if token == "":
-      return False
+        return False
     return True
 
 
@@ -65,12 +83,12 @@ if __name__ == "__main__":
 
     logins = db.fetch_logins()
     is_logged = len(logins) != 0
-   
+
     while not is_logged:
         is_logged = show_login_menu()
 
     if is_logged:
-        
+
         token = logins[0][-1]
         user_details = Auth().get_user_info(token=token)
         sync_folder_name_cloud = user_details["sync_folder_name"]
@@ -81,8 +99,6 @@ if __name__ == "__main__":
             indexer=my_indexer,
             user_sync_folder=sync_folder_name_cloud,
         )
-        create_folder(sync_folder= sync_folder_name_cloud) 
-        print(user_details)
+        create_folder(sync_folder=sync_folder_name_cloud, token=token)
+   
         my_watcher.start_sync()
-
-
