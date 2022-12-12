@@ -33,29 +33,21 @@ def create_folder(sync_folder: str, token: str):
             )
             print("Folder Created on the Cloud")
 
-          
         except Exception as e:
             print(e)
 
         print("Creating Database....")
         db.create_table()
 
+        attr = {"device": user_name, "sync_folder": sync_folder}
 
-        attr = {
-            "device": user_name,
-            "sync_folder": sync_folder
-        }
-
-        update = str(attr)
+        update = str([attr])
         response = Services.cognito.update_user_attributes(
-                UserAttributes=[
-                    {
-                        "Name": "custom:desktop",
-                        "Value": update
-                    },
-                ],
-                AccessToken=token,
-            )
+            UserAttributes=[
+                {"Name": "custom:desktop", "Value": update},
+            ],
+            AccessToken=token,
+        )
     else:
         print("Your sync folder is " + sync_folder_path)
 
@@ -100,5 +92,5 @@ if __name__ == "__main__":
             user_sync_folder=sync_folder_name_cloud,
         )
         create_folder(sync_folder=sync_folder_name_cloud, token=token)
-   
+
         my_watcher.start_sync()
