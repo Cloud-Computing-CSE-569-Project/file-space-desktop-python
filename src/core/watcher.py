@@ -1,12 +1,15 @@
 from .downloader import Downloader
 from .uploader import Uploader
 import time
+from datetime import timezone, datetime
 import logging
 import os
+import uuid
 from utlis.parser import FileParser
 from threading import Thread
 from config.db import DBConnector
 from threading import Thread
+from queue import Queue
 
 from watchdog.observers import (
     Observer,
@@ -30,6 +33,7 @@ class Watcher(object):
         self.sync_folder = sync_folder
         self.sync_folder_remote = sync_folder_remote
         self.observer = Observer()
+        self.queue = Queue()
 
     def sync(self):
         """
@@ -80,7 +84,7 @@ class Watcher(object):
         downloader = None
         uploader = None
 
-        self._pull(worker=downloader)
+        #self._pull(worker=downloader)
         self._push(worker=uploader)
     
 
@@ -91,27 +95,42 @@ class Watcher(object):
             worker.daemon = True #make it a daemon
             worker.start()
         
-    
 
     def _push(self, worker: Thread):
 
         db = DBConnector()
         print("I just started - Checking if there are things to update!")
 
-        
-        for file in os.listdir():
-            if db.ensure_file_exists(file_path=file):
+        for file in DirectorySnapshot(path= self.sync_folder, recursive=True).paths:
+            if db.ensure_file_exists(file_path=file) and not os.path.samefile(self.sync_folder):
                 continue
             else:
-                print("{0} is not on the table".format(file))
-                worker = Uploader()
+                
+                worker = Uploader(sync_folder = self.sync_folder_remote, queue = self.queue)
+                worker.daemon = True
                 worker.start()
-                worker.join()
 
-              
-
-    def _describe(self, stat_info):
-        print(stat_info)
+                is_folder = os.path.isdir(file)
+                
+                data = {
+                    "is_folder": is_folder,
+                    "file_extension": "folder" if is_folder == True else os.path.splitext(p=file)[-1],
+                    "modified": datetime.fromtimestamp(os.stat(file).st_mtime, tz=timezone.utc).strftime('%Y-%m-%d-%H:%M'),
+                    "file_size": os.stat(file).st_size,
+                    "file_path": "".join(os.path.realpath(file)).replace(os.path.basename(p=file), ""),
+                    "file_name": os.path.basename(p=file),
+                    "is_starred": False,
+                    "access_list": [],
+                    "user": {
+                        "email": "",
+                        "id": ""
+                    }
+                }
+               
+                self.queue.put(item = data)
+    
+        self.queue.join()
+            
 
     def _schedule(self):
         logging.basicConfig(

@@ -10,9 +10,10 @@ class Downloader(Thread):
         Thread.__init__(self=self)
 
     def run(self) -> None:
-        while True:
+        for i in range(4):
             print("Hello I am the downloader : ", datetime.now())
             sleep(1)
+           
 
     def _download(self, file_name: str):
         "Download a file given a file path"

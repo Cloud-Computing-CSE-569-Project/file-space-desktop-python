@@ -8,7 +8,7 @@ from config.db import DBConnector
 from models.user import User
 import requests
 from core.watcher import Watcher
-
+from queue import Queue
 sync_folder_name = "My Space"
 user_name = os.getlogin()
 
@@ -85,11 +85,12 @@ if __name__ == "__main__":
         user_details = Auth().get_user_info(token=token)
         sync_folder_name_cloud = user_details["sync_folder_name"]
         print("Welcome " + user_details["name"])
-
+     
         my_watcher = Watcher(
             sync_folder=sync_folder_path,
             sync_folder_remote=sync_folder_name_cloud,
         )
+
         create_folder(sync_folder=sync_folder_name_cloud, token=token)
 
         my_watcher.sync()  # 726374143976

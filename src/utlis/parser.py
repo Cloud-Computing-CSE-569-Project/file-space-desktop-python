@@ -8,3 +8,11 @@ class FileParser:
 
     def get_name(self, path):
         return path.split("/")[-1]
+
+    def get_extension(self, path:str):
+        res = ""
+        for rev in reversed(path):
+            if rev != ".":
+                res = res + rev
+            else: break
+        return res
