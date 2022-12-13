@@ -6,5 +6,5 @@ class FileParser:
         """Returns the local file storage path for a given file key"""
         return os.path.join(path, self.prefix, key)
 
-    def get_s3_path(self, key):
+    def get_name(self, key):
         return key.split("/")[-1]

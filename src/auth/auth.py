@@ -36,16 +36,21 @@ class Auth:
             return e.args
 
     def get_user_info(self, token):
-        user = Services.cognito.get_user(AccessToken=token)
 
-        return {
-            "sync_folder_name": user["Username"],
-            "name": [
-                attr["Value"]
-                for attr in user["UserAttributes"]
-                if attr["Name"] == "name"
-            ][0],
-        }
+        try:
+            user = Services.cognito.get_user(AccessToken=token)
+
+            if user:
+                return {
+                    "sync_folder_name": user["Username"],
+                    "name": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "name"
+                    ][0],
+                }
+        except Exception as e:
+            print(e)
 
     def _save_login(self, token):
         db = DBConnector()
