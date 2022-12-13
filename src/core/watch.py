@@ -1,8 +1,10 @@
-import sys
+import json
 import time
 import logging
 import os
 from utlis.parser import FileParser
+from threading import Thread
+from config.db import DBConnector
 
 from watchdog.observers import (
     Observer,
@@ -26,11 +28,13 @@ class Watcher(object):
         self.sync_folder = sync_folder
         self.sync_folder_remote = sync_folder_remote
         self.observer = Observer()
+        
 
     def sync(self):
         """
         Calls the _schedule  and _start to start synchronizing the file
         """
+        os.chdir(self.sync_folder)
         self._schedule()
         self._start()
 
@@ -52,7 +56,7 @@ class Watcher(object):
         """
         print(
             """{0} has been {1}""".format(
-                FileParser().get_name(key=event.src_path), event.event_type
+                FileParser().get_name(path = event.src_path), event.event_type
             )
         )
 
@@ -72,16 +76,34 @@ class Watcher(object):
         """
         Push and Pull all the changes that happened while I was sleeping!
         """
-        # self._pull()
+        self._pull()
         self._push()
+
 
     def _pull(self):
         print("I am just Started - Checking if I missed something!")
+        
+    """"   id integer primary key autoincrement,
+			    file_name VARCHAR(255) NOT NULL unique,
+                is_folder BOOL not null,
+                last_modified datetime not null,
+                file_path varchar(255) not null,
+			    version varchar(255)); """
 
     def _push(self):
+       
+        db = DBConnector()
         print("I just started - Checking if there are things to update!")
+        
+       
+        for file in os.listdir():
+            if db.ensure_file_exists(file_path = file):
+                pass
+            else:
+                print("{0} is not on the table".format(file))
+    
 
-    def _describe(self, path, stat_info):
+    def _describe(self, stat_info):
         print(stat_info)
 
     def _schedule(self):

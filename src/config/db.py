@@ -29,8 +29,11 @@ class DBConnector:
 
         table = """ CREATE TABLE Files (
                 id integer primary key autoincrement,
-			    name VARCHAR(255) NOT NULL unique,
-			    version CHAR(25)); """
+			    file_name VARCHAR(255) NOT NULL unique,
+                is_folder BOOL not null,
+                last_modified datetime not null,
+                file_path varchar(255) not null unique,
+			    version varchar(255)); """
 
         cursor_obj.execute(table)
 
@@ -46,6 +49,7 @@ class DBConnector:
                 id integer primary key autoincrement,
                 username varchar(255) NOT NULL,
                 isLogged bool not null default 0,
+                refreshToken varchar(255),
 			    accessToken varchar(255)); """
 
         cursor_obj.execute(table)
@@ -83,3 +87,14 @@ class DBConnector:
         cursor = self.connection.cursor()
         cursor.execute("""SELECT * FROM Files;""")
         return cursor.fetchall()
+
+    def ensure_file_exists(self, file_path:str)->bool:
+        cursor = self.connection.cursor()
+        
+        response = cursor.execute(""" SELECT * FROM Files where file_path = '{0}';""".format(file_path)).fetchall()
+
+        if len(response) == 1:
+            return True
+        else:
+            return False
+
