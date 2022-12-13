@@ -71,17 +71,15 @@ class Watcher(object):
         downloader = None
         uploader = None
 
-        #self._pull(worker=downloader)
-        self._push(worker = uploader)
-    
+        # self._pull(worker=downloader)
+        self._push(worker=uploader)
 
     def _pull(self, worker: Thread):
         print("I am just Started - Checking if I missed something!")
         for i in range(8):
             worker = Downloader()
-            worker.daemon = True #make it a daemon
+            worker.daemon = True  # make it a daemon
             worker.start()
-        
 
     def _push(self, worker: Thread):
 
@@ -89,41 +87,49 @@ class Watcher(object):
 
         print("I just started - Checking if there are things to update!")
 
-        for file in DirectorySnapshot(path= self.sync_folder, recursive=True).paths:
-            if db.ensure_file_exists(file_path=file) and not os.path.samefile(self.sync_folder):
+        for file in DirectorySnapshot(path=self.sync_folder, recursive=True).paths:
+            if db.ensure_file_exists(file_path=file) and not os.path.samefile(
+                self.sync_folder
+            ):
                 continue
             else:
-                
-                worker = Uploader(sync_folder = self.sync_folder_remote, queue = self.queue)
+
+                worker = Uploader(sync_folder=self.sync_folder_remote, queue=self.queue)
                 worker.daemon = True
                 worker.start()
 
                 is_folder = os.path.isdir(file)
-               
+
                 data = {
                     "is_folder": is_folder,
-                    "file_extension": "folder" if is_folder == True else os.path.splitext(p=file)[-1],
-                    "modified": datetime.fromtimestamp(os.stat(file).st_mtime, tz=timezone.utc).strftime('%Y-%m-%d-%H:%M'),
+                    "file_extension": "folder"
+                    if is_folder == True
+                    else os.path.splitext(p=file)[-1],
+                    "modified": datetime.fromtimestamp(
+                        os.stat(file).st_mtime, tz=timezone.utc
+                    ).strftime("%Y-%m-%d-%H:%M"),
                     "file_size": os.stat(file).st_size,
-                    "file_path": "".join(os.path.realpath(file)).replace(os.path.basename(p=file), ""),
+                    "file_path": "".join(os.path.realpath(file)).replace(
+                        os.path.basename(p=file), ""
+                    ),
                     "file_name": os.path.basename(p=file),
                     "is_starred": False,
                     "access_list": [
-                          {
+                        {
                             "email": self.user["email"],
-                            "id": ""
-                        }],
+                            "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
+                        }
+                    ],
                     "user": {
                         "email": self.user["email"],
-                        "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b"
-                    }
+                        "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
+                    },
                 }
-                print(data)
-                #db.update(file =  LocalFile(is_folder=data["is_folder"], last_modified = data["modified"], file_path = file, version = os.stat(path = file).st_uid))
-            self.queue.put(item = data)
-    
+
+                # db.update(file =  LocalFile(is_folder=data["is_folder"], last_modified = data["modified"], file_path = file, version = os.stat(path = file).st_uid))
+            self.queue.put(item=data)
+
         self.queue.join()
-            
 
     def _schedule(self):
         logging.basicConfig(

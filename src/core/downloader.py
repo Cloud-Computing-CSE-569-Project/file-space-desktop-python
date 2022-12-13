@@ -3,9 +3,10 @@ from time import sleep
 from datetime import datetime
 from queue import Queue
 
+
 class Downloader(Thread):
-    def __init__(self, sync_folder: str, queue = Queue):
-        Thread.__init__(self = self)
+    def __init__(self, sync_folder: str, queue=Queue):
+        Thread.__init__(self=self)
         self.sync_folder = sync_folder
         self.queue = queue
 
@@ -13,7 +14,7 @@ class Downloader(Thread):
         while True:
             file = self.queue.get()
             try:
-                self._download(file = file)
+                self._download(file=file)
             finally:
                 self.queue.task_done()
                 print("Operation finished with success")

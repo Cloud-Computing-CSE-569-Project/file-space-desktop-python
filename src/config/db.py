@@ -2,6 +2,7 @@ import sqlite3
 from models.login import Login
 from models.local_file import LocalFile
 
+
 class DBConnector:
     def __init__(self):
         self.connection = sqlite3.connect("/tmp/sql.db")

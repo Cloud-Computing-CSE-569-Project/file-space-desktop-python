@@ -7,9 +7,10 @@ import requests, json
 
 backend_url = ""
 
+
 class Uploader(Thread):
-    def __init__(self, sync_folder: str, queue = Queue):
-        Thread.__init__(self = self)
+    def __init__(self, sync_folder: str, queue=Queue):
+        Thread.__init__(self=self)
         self.sync_folder = sync_folder
         self.queue = queue
 
@@ -17,7 +18,7 @@ class Uploader(Thread):
         while True:
             file = self.queue.get()
             try:
-                self._upload(file = file)
+                self._upload(file=file)
             finally:
                 self.queue.task_done()
                 print("Operation finished with success")
@@ -27,6 +28,6 @@ class Uploader(Thread):
     def _upload(self, file: dict):
         print("I am uploading this ", file["file_name"])
         # upload file to amazon s3
-        #send response to the queue
+        # send response to the queue
         """ bucket = Services.s3.Bucket(Bucket= Services.bucket_name)
         response = bucket.upload_file() """

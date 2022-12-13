@@ -2,6 +2,7 @@ from pydantic import BaseModel
 from .user import User
 from typing import List
 
+
 class ObjectBase(BaseModel):
     is_folder: bool
     modified: str
@@ -13,9 +14,11 @@ class ObjectBase(BaseModel):
     access_list: List[User]
     user: User
 
+
 class ObjectCreate(ObjectBase):
     pass
 
+
 class ObjectUpdate(BaseModel):
-    object_id:str
-    is_starred:bool
+    object_id: str
+    is_starred: bool
