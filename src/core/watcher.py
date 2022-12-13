@@ -4,13 +4,11 @@ import time
 from datetime import timezone, datetime
 import logging
 import os
-import uuid
 from utlis.parser import FileParser
-from threading import Thread
 from config.db import DBConnector
 from threading import Thread
 from queue import Queue
-
+from models.local_file import LocalFile
 from watchdog.observers import (
     Observer,
 )  # creating an instance of the watchdog.observers.Observer from watchdogs class.
@@ -29,11 +27,12 @@ sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 
 
 class Watcher(object):
-    def __init__(self, sync_folder: str, sync_folder_remote: str):
+    def __init__(self, sync_folder: str, sync_folder_remote: str, user):
         self.sync_folder = sync_folder
         self.sync_folder_remote = sync_folder_remote
         self.observer = Observer()
         self.queue = Queue()
+        self.user = user
 
     def sync(self):
         """
@@ -65,18 +64,6 @@ class Watcher(object):
             )
         )
 
-    def _download_from_cloud(self, file):
-        """
-        Download file from cloud that are not in the local DB
-        """
-        pass
-
-    def _upload_to_cloud(self, file):
-        """
-        Upload a file to the cloud and communicate with the Queue to update metadata
-        """
-        pass
-
     def _on_thread_start(self):
         """
         Push and Pull all the changes that happened while I was sleeping!
@@ -85,7 +72,7 @@ class Watcher(object):
         uploader = None
 
         #self._pull(worker=downloader)
-        self._push(worker=uploader)
+        self._push(worker = uploader)
     
 
     def _pull(self, worker: Thread):
@@ -99,6 +86,7 @@ class Watcher(object):
     def _push(self, worker: Thread):
 
         db = DBConnector()
+
         print("I just started - Checking if there are things to update!")
 
         for file in DirectorySnapshot(path= self.sync_folder, recursive=True).paths:
@@ -111,7 +99,7 @@ class Watcher(object):
                 worker.start()
 
                 is_folder = os.path.isdir(file)
-                
+               
                 data = {
                     "is_folder": is_folder,
                     "file_extension": "folder" if is_folder == True else os.path.splitext(p=file)[-1],
@@ -120,14 +108,19 @@ class Watcher(object):
                     "file_path": "".join(os.path.realpath(file)).replace(os.path.basename(p=file), ""),
                     "file_name": os.path.basename(p=file),
                     "is_starred": False,
-                    "access_list": [],
+                    "access_list": [
+                          {
+                            "email": self.user["email"],
+                            "id": ""
+                        }],
                     "user": {
-                        "email": "",
-                        "id": ""
+                        "email": self.user["email"],
+                        "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b"
                     }
                 }
-               
-                self.queue.put(item = data)
+                print(data)
+                #db.update(file =  LocalFile(is_folder=data["is_folder"], last_modified = data["modified"], file_path = file, version = os.stat(path = file).st_uid))
+            self.queue.put(item = data)
     
         self.queue.join()
             

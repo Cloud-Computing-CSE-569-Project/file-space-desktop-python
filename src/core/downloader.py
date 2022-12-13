@@ -1,22 +1,24 @@
 from threading import Thread
 from time import sleep
 from datetime import datetime
-
+from queue import Queue
 
 class Downloader(Thread):
-    def __ini__(self, sync_folder_name: str, sync_folder: str):
-        self.sync_folder_name = sync_folder_name
+    def __init__(self, sync_folder: str, queue = Queue):
+        Thread.__init__(self = self)
         self.sync_folder = sync_folder
-        Thread.__init__(self=self)
+        self.queue = queue
 
     def run(self) -> None:
-        for i in range(4):
-            print("Hello I am the downloader : ", datetime.now())
+        while True:
+            file = self.queue.get()
+            try:
+                self._download(file = file)
+            finally:
+                self.queue.task_done()
+                print("Operation finished with success")
+
             sleep(1)
-           
 
-    def _download(self, file_name: str):
-        "Download a file given a file path"
-
-    def join(self, timeout=None):
-        Thread.join(self=self, timeout=timeout)
+    def _download(self, file: dict):
+        print("I am downloading this ", file["file_name"])

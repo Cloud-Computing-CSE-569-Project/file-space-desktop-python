@@ -87,10 +87,10 @@ if __name__ == "__main__":
         print("Welcome " + user_details["name"])
      
         my_watcher = Watcher(
-            sync_folder=sync_folder_path,
-            sync_folder_remote=sync_folder_name_cloud,
+            sync_folder = sync_folder_path,
+            sync_folder_remote = sync_folder_name_cloud,
+            user = user_details
         )
 
         create_folder(sync_folder=sync_folder_name_cloud, token=token)
-
         my_watcher.sync()  # 726374143976

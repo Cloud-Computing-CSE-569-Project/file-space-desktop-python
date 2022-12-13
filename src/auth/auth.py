@@ -31,7 +31,6 @@ class Auth:
 
     def get_session(self):
         try:
-
             return Services.cognito_id.get_id(IdentityPoolId=IDENTITY_POOL_ID)
         except Exception as e:
             return e.args
@@ -49,6 +48,10 @@ class Auth:
                         for attr in user["UserAttributes"]
                         if attr["Name"] == "name"
                     ][0],
+                    "email": [attr["Value"] for attr in user["UserAttributes"] if attr["Name"] == "email"][0],
+                    "limit_quota": [attr["Value"] for attr in user["UserAttributes"] if attr["Name"] =="custom:limit_quota"],
+                    "quota_used": [attr["Value"] for attr in user["UserAttributes"] if attr["Name"] =="custom:quota_used"],
+                    "desktop":  [attr["Value"] for attr in user["UserAttributes"] if attr["Name"] =="custom:desktop"]
                 }
         except Exception as e:
             print(e)

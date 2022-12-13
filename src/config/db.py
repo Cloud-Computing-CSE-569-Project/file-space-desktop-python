@@ -1,6 +1,6 @@
 import sqlite3
 from models.login import Login
-
+from models.local_file import LocalFile
 
 class DBConnector:
     def __init__(self):
@@ -57,11 +57,11 @@ class DBConnector:
     def _close(self):
         self.connection.close()
 
-    def update(self, name: str, version: str):
+    def update(self, file: LocalFile):
         cursor = self.connection.cursor()
         cursor.execute(
-            """Insert into Files(name, version) values('{0}', '{1}')""".format(
-                name, version
+            """Insert into Files(is_folder, last_modified, file_path, version) values('{0}', '{1}', '{2}'. '{3}')""".format(
+                **file
             )
         )
         self.connection.commit()

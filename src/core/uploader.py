@@ -3,6 +3,9 @@ from time import sleep
 from datetime import datetime
 from queue import Queue
 from config.aws import Services
+import requests, json
+
+backend_url = ""
 
 class Uploader(Thread):
     def __init__(self, sync_folder: str, queue = Queue):
@@ -17,6 +20,7 @@ class Uploader(Thread):
                 self._upload(file = file)
             finally:
                 self.queue.task_done()
+                print("Operation finished with success")
 
             sleep(1)
 
