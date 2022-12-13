@@ -1,12 +1,13 @@
 from auth.auth import Auth
 import json
 import sys, os
-from core.watcher import Watcher
+from core.watch import Watcher
 from core.indexer import Indexer
 from config.aws import Services
+import boto3
 from config.db import DBConnector
 
-import uuid
+import requests
 
 sync_folder_name = "My Space"
 user_name = os.getlogin()
@@ -87,10 +88,10 @@ if __name__ == "__main__":
         print("Welcome " + user_details["name"])
 
         my_watcher = Watcher(
-            sync_folder_path=sync_folder_path,
-            indexer=my_indexer,
-            user_sync_folder=sync_folder_name_cloud,
+            sync_folder=sync_folder_path,
+            sync_folder_remote = sync_folder_name_cloud,
         )
         create_folder(sync_folder=sync_folder_name_cloud, token=token)
 
-        my_watcher.start_sync()
+        my_watcher.sync() #726374143976
+      

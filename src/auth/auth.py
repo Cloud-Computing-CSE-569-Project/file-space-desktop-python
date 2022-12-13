@@ -5,8 +5,8 @@ import sys
 from config.db import DBConnector
 from models.login import Login
 
-USER_POOL_ID = os.getenv("USER_POOL_ID")
-CLIENT_ID = os.getenv("DESKTOP_CLIENT_ID")
+USER_POOL_ID = "us-east-2_M1Eh4E3MA"  # os.getenv("USER_POOL_ID")
+CLIENT_ID = "4rmavund0ekutqevh36li6ehta"  # os.getenv("DESKTOP_CLIENT_ID")
 CLIENT_SECRET = os.getenv("DESKTOP_CLIENT_SECRET")
 IDENTITY_POOL_ID = os.getenv("IDENTITY_POOL_ID")
 BUCKET_ID = os.getenv("BUCKET_ID")

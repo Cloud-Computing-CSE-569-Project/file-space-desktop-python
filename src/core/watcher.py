@@ -8,6 +8,7 @@ from config.db import DBConnector
 import uuid
 import multiprocessing
 from auth.auth import Auth
+import requests
 
 user_name = os.getlogin()
 sync_folder_name = "My Space"
@@ -43,6 +44,9 @@ class Watcher:
     def sync(self):
         """Syncs the local and remote S3 copies"""
         pool = multiprocessing.Pool()
+        request_response = requests.get(
+            "http://127.0.0.1:8000/user/us-east-2%3A09f3597a-ad39-4e40-8a7f-502ca9b93458&ipmrt5%40glockapps.com/files/all"
+        )
 
         files_on_cloud = [
             file.key.split("/")[-1]
