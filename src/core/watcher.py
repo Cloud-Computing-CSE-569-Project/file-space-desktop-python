@@ -8,18 +8,14 @@ from utlis.parser import FileParser
 from config.db import DBConnector
 from threading import Thread
 from queue import Queue
-from models.local_file import LocalFile
+import uuid
 from watchdog.observers import (
     Observer,
 )  # creating an instance of the watchdog.observers.Observer from watchdogs class.
 from watchdog.events import (
     LoggingEventHandler,
 )  # implementing a subclass of watchdog.events.FileSystemEventHandler which is LoggingEventHandler in our case
-from watchdog.utils.dirsnapshot import (
-    DirectorySnapshot,
-    DirectorySnapshotDiff,
-    EmptyDirectorySnapshot,
-)
+from watchdog.utils.dirsnapshot import DirectorySnapshot
 
 user_name = os.getlogin()
 sync_folder_name = "My Space"
@@ -88,13 +84,11 @@ class Watcher(object):
         print("I just started - Checking if there are things to update!")
 
         for file in DirectorySnapshot(path=self.sync_folder, recursive=True).paths:
-            if db.ensure_file_exists(file_path=file) and not os.path.samefile(
-                self.sync_folder
-            ):
+
+            if db.ensure_file_exists(file_path=file) or os.path.samefile(self.sync_folder, file):
                 continue
             else:
-
-                worker = Uploader(sync_folder=self.sync_folder_remote, queue=self.queue)
+                worker = Uploader(sync_folder=self.sync_folder_remote, queue=self.queue, user= self.user)
                 worker.daemon = True
                 worker.start()
 
@@ -110,8 +104,7 @@ class Watcher(object):
                     ).strftime("%Y-%m-%d-%H:%M"),
                     "file_size": os.stat(file).st_size,
                     "file_path": "".join(os.path.realpath(file)).replace(
-                        os.path.basename(p=file), ""
-                    ),
+                        os.path.basename(p=file), "").replace("/home/", "").replace(os.getlogin(), ""),
                     "file_name": os.path.basename(p=file),
                     "is_starred": False,
                     "access_list": [
@@ -125,9 +118,8 @@ class Watcher(object):
                         "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
                     },
                 }
-
-                # db.update(file =  LocalFile(is_folder=data["is_folder"], last_modified = data["modified"], file_path = file, version = os.stat(path = file).st_uid))
-            self.queue.put(item=data)
+                #print(data)
+                self.queue.put(item=data)
 
         self.queue.join()
 

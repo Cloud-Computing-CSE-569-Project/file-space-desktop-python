@@ -5,24 +5,18 @@ from models.local_file import LocalFile
 
 class DBConnector:
     def __init__(self):
-        self.connection = sqlite3.connect("/tmp/sql.db")
+        self.connection = sqlite3.connect("/tmp/sql.db", timeout= 25)
         self._init_connection()
 
     def _init_connection(self):
 
         try:
-
             cursor = self.connection.cursor()
-
             result = cursor.fetchall()
-
-            # cursor.close()
-
         except Exception as e:
             print(e)
 
     def create_table(self):
-
         # cursor object
         cursor_obj = self.connection.cursor()
 
@@ -33,7 +27,7 @@ class DBConnector:
 			    file_name VARCHAR(255) NOT NULL unique,
                 is_folder BOOL not null,
                 last_modified datetime not null,
-                file_path varchar(255) not null unique,
+                file_path varchar(255) not null,
 			    version varchar(255)); """
 
         cursor_obj.execute(table)
@@ -61,8 +55,8 @@ class DBConnector:
     def update(self, file: LocalFile):
         cursor = self.connection.cursor()
         cursor.execute(
-            """Insert into Files(is_folder, last_modified, file_path, version) values('{0}', '{1}', '{2}'. '{3}')""".format(
-                **file
+            """Insert into Files(file_name, is_folder, last_modified, file_path, version) values('{0}', '{1}', '{2}', '{3}', '{4}')""".format(
+               file.file_name,  file.is_folder, file.last_modified, file.file_path, file.version
             )
         )
         self.connection.commit()

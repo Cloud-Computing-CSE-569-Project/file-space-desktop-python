@@ -57,7 +57,7 @@ class Auth:
                         attr["Value"]
                         for attr in user["UserAttributes"]
                         if attr["Name"] == "custom:limit_quota"
-                    ],
+                    ][0],
                     "quota_used": [
                         attr["Value"]
                         for attr in user["UserAttributes"]
@@ -67,7 +67,12 @@ class Auth:
                         attr["Value"]
                         for attr in user["UserAttributes"]
                         if attr["Name"] == "custom:desktop"
-                    ],
+                    ][0],
+                    "username": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "sub"
+                    ][0],
                 }
         except Exception as e:
             print(e)
