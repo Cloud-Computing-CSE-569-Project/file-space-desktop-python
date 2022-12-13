@@ -1,13 +1,13 @@
 from auth.auth import Auth
 import json
 import sys, os
-from core.watch import Watcher
 from core.indexer import Indexer
 from config.aws import Services
 import boto3
 from config.db import DBConnector
-
+from models.user import User
 import requests
+from core.watcher import Watcher
 
 sync_folder_name = "My Space"
 user_name = os.getlogin()
@@ -81,7 +81,6 @@ if __name__ == "__main__":
         is_logged = show_login_menu()
 
     if is_logged:
-
         token = logins[0][-1]
         user_details = Auth().get_user_info(token=token)
         sync_folder_name_cloud = user_details["sync_folder_name"]

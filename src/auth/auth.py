@@ -4,6 +4,7 @@ import uuid
 import sys
 from config.db import DBConnector
 from models.login import Login
+from models.user import User
 
 USER_POOL_ID = "us-east-2_M1Eh4E3MA"  # os.getenv("USER_POOL_ID")
 CLIENT_ID = "4rmavund0ekutqevh36li6ehta"  # os.getenv("DESKTOP_CLIENT_ID")
@@ -60,3 +61,9 @@ class Auth:
         login_details = Login(username=user["Username"], access_token=token)
 
         print("Login ", db.create_login(login_details))
+
+    def signup(self, user: User):
+        """"
+            Singup new user
+        """ ""
+        return user

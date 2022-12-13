@@ -88,13 +88,14 @@ class DBConnector:
         cursor.execute("""SELECT * FROM Files;""")
         return cursor.fetchall()
 
-    def ensure_file_exists(self, file_path:str)->bool:
+    def ensure_file_exists(self, file_path: str) -> bool:
         cursor = self.connection.cursor()
-        
-        response = cursor.execute(""" SELECT * FROM Files where file_path = '{0}';""".format(file_path)).fetchall()
+
+        response = cursor.execute(
+            """ SELECT * FROM Files where file_path = '{0}';""".format(file_path)
+        ).fetchall()
 
         if len(response) == 1:
             return True
         else:
             return False
-
