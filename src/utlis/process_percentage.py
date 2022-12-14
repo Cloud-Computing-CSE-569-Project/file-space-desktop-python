@@ -9,7 +9,6 @@ class ProgressPercentage(object):
         self._size = float(os.path.getsize(filename))
         self._seen_so_far = 0
         self._lock = threading.Lock()
-        
 
     def __call__(self, bytes_amount):
         with self._lock:

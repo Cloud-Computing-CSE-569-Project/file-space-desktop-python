@@ -1,8 +1,8 @@
 from models.event import SyncEvent
 from config.db import DBConnector
 
+
 class Indexer:
-   
     def __init__(self) -> None:
         self.db = DBConnector()
 

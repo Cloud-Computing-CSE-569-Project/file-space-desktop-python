@@ -12,9 +12,9 @@ class Downloader(Thread):
 
     def run(self) -> None:
         while True:
-            file = self.queue.get()
+            my_file = self.queue.get()
             try:
-                self._download(file=file)
+                self._download(file=my_file)
             finally:
                 self.queue.task_done()
                 print("Operation finished with success")
