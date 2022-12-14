@@ -1,22 +1,16 @@
 from models.event import SyncEvent
+from config.db import DBConnector
 
 
 class Indexer:
-    def event_handler(self, event: SyncEvent):
-        if event is SyncEvent.deleted:
-            self._event_delete()
-        elif event is SyncEvent.created:
-            self._event_create()
-        elif event is SyncEvent.updated:
-            self._event_update()
-        else:
-            print("Nothing happened")
+    def __init__(self) -> None:
+        self.db = DBConnector()
 
-    def _event_update(self):
+    def event_update(self):
         print("Something updated")
 
-    def _event_delete(self):
+    def event_delete(self):
         print("Something deleted")
 
-    def _event_create(self):
+    def event_create(self):
         print("New File added")

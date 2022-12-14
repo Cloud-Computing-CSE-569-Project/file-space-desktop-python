@@ -1,13 +1,8 @@
 from auth.auth import Auth
-import json
-import sys, os
-from core.watch import Watcher
-from core.indexer import Indexer
+import os
 from config.aws import Services
-import boto3
 from config.db import DBConnector
-
-import requests
+from core.watcher import Watcher
 
 sync_folder_name = "My Space"
 user_name = os.getlogin()
@@ -72,7 +67,6 @@ if __name__ == "__main__":
     db = DBConnector()
     db.create_login_table()
     print("Welcome To File Space")
-    my_indexer = Indexer()
 
     logins = db.fetch_logins()
     is_logged = len(logins) != 0
@@ -81,16 +75,16 @@ if __name__ == "__main__":
         is_logged = show_login_menu()
 
     if is_logged:
-
         token = logins[0][-1]
         user_details = Auth().get_user_info(token=token)
-        sync_folder_name_cloud = user_details["sync_folder_name"]
+        sync_folder_name_cloud = "public/sync_folders"
         print("Welcome " + user_details["name"])
 
         my_watcher = Watcher(
             sync_folder=sync_folder_path,
             sync_folder_remote=sync_folder_name_cloud,
+            user=user_details,
         )
-        create_folder(sync_folder=sync_folder_name_cloud, token=token)
 
+        create_folder(sync_folder=sync_folder_name_cloud, token=token)
         my_watcher.sync()  # 726374143976

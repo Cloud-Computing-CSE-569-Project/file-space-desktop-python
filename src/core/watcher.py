@@ -1,135 +1,175 @@
+from .downloader import Downloader
+from .uploader import Uploader
+import time
+from datetime import timezone, datetime
+import logging
 import os
-from time import sleep
-from threading import Thread
-from .indexer import Indexer
-from models.event import SyncEvent
-from config.aws import Services
+from utlis.parser import FileParser
 from config.db import DBConnector
+from threading import Thread
+from queue import Queue
 import uuid
-import multiprocessing
-from auth.auth import Auth
-import requests
+from watchdog.observers import (
+    Observer,
+)
+from watchdog.events import *
+from watchdog.events import (
+    LoggingEventHandler,
+)
+from watchdog.utils.dirsnapshot import DirectorySnapshot
 
 user_name = os.getlogin()
 sync_folder_name = "My Space"
 sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 
-bucket = Services.s3.Bucket(Services.bucket_name)
-
-indexer = Indexer()
+db = DBConnector()
 
 
-class Watcher:
-    def __init__(self, sync_folder_path: str, indexer: Indexer, user_sync_folder: str):
-        self.sync_folder_path = sync_folder_path
-        self.indexer = indexer
-        self.bucket = Services.s3.Bucket(Services.bucket_name)
-        self.user_sync_folder = user_sync_folder
-        self.remote_thread = SyncRemote()
-        self.local_thread = SyncLocal()
-
-    def start_sync(
-        self,
-    ):
-        self.local_thread.start()
-        self.remote_thread.start()
-
-    def _sync(self, key):
-        for file in os.listdir():
-            if file != key:
-                print("Print not found I will upload")
-            else:
-                print("Found, I will try to update")
+class Watcher(object):
+    def __init__(self, sync_folder: str, sync_folder_remote: str, user):
+        self.sync_folder = sync_folder
+        self.sync_folder_remote = sync_folder_remote
+        self.observer = Observer()
+        self.queue = Queue()
+        self.user = user
 
     def sync(self):
-        """Syncs the local and remote S3 copies"""
-        pool = multiprocessing.Pool()
-        request_response = requests.get(
-            "http://127.0.0.1:8000/user/us-east-2%3A09f3597a-ad39-4e40-8a7f-502ca9b93458&ipmrt5%40glockapps.com/files/all"
-        )
+        """
+        Calls the _schedule  and _start to start synchronizing the file
+        """
+        os.chdir(self.sync_folder)
+        self._schedule()
+        self._start()
 
-        files_on_cloud = [
-            file.key.split("/")[-1]
-            for file in self.bucket.objects.filter(
-                Prefix="sync_folders/" + self.user_sync_folder + "/"
+    def _on_created(self, event: FileCreatedEvent):
+        """
+        File has been created. As it can be a newly downloaded the file, we need to make sure to add to local DB if it is not there and then call upload to storage.
+        """
+
+        print(event.key)
+
+    def _on_deleted(self, event: FileDeletedEvent):
+        """
+        If the file has been deleted, the delete from the metadata and consequently from the Cloud storage
+        """
+        print(event)
+
+    def on_file_moved(self, event: FileMovedEvent):
+        pass
+
+    def _on_modified(self, event: FileModifiedEvent):
+        """
+        File is already in DB and has been changed, compute the file diff and upload only what have changed.
+        """
+
+        # if this file is not yet on d
+        if (
+            db.ensure_file_exists(file_path=event.src_path)
+            and event.src_path != "My Space"
+        ):
+            # update file to cloud
+            pass
+        else:
+            worker = Uploader(
+                sync_folder=self.sync_folder_remote, queue=self.queue, user=self.user
             )
-        ]
-        print(files_on_cloud)
-        pool.starmap(self._sync, files_on_cloud)
+            worker.daemon = True
+            worker.start()
+            data = FileParser().file_to_object(file=event.src_path, user=self.user)
+            self.queue.put(item=data)
+        self.queue.join()
 
+    def _on_thread_start(self):
+        """
+        Push and Pull all the changes that happened while I was sleeping!
+        """
+        downloader = None
+        uploader = None
 
-class SyncLocal(Thread):
-    def run(self):
+        # self._pull(worker=downloader)
+        self._push(worker=uploader)
 
-        db = DBConnector()
-        user = Auth().get_user_info(token=db.fetch_logins()[0][-1])
-        os.chdir(sync_folder_path)
-        while True:
-            files_local = [file_db[1] for file_db in db.fetch_files()]
+    def _pull(self, worker: Thread):
+        print("I am just Started - Checking if I missed something!")
+        for i in range(8):
+            worker = Downloader()
+            worker.daemon = True  # make it a daemon
+            worker.start()
 
-            cloud_files = [
-                file.key.split("/")[-1]
-                for file in bucket.objects.filter(
-                    Prefix="sync_folders/" + user["sync_folder_name"] + "/"
+    def _push(self, worker: Thread):
+
+        print("I just started - Checking if there are things to update!")
+
+        for file in DirectorySnapshot(path=self.sync_folder, recursive=True).paths:
+
+            if db.ensure_file_exists(file_path=file) or os.path.samefile(
+                self.sync_folder, file
+            ):
+                continue
+            else:
+                worker = Uploader(
+                    sync_folder=self.sync_folder_remote,
+                    queue=self.queue,
+                    user=self.user,
                 )
-            ]
+                worker.daemon = True
+                worker.start()
 
-            for file in os.listdir():
+                data = FileParser().file_to_object(file=file, user=self.user)
+                """   is_folder = os.path.isdir(file)
 
-                if file not in files_local:
+                data = {
+                    "is_folder": is_folder,
+                    "file_extension": "folder"
+                    if is_folder == True
+                    else os.path.splitext(p=file)[-1],
+                    "modified": datetime.fromtimestamp(
+                        os.stat(file).st_mtime, tz=timezone.utc
+                    ).strftime("%Y-%m-%d-%H:%M"),
+                    "file_size": os.stat(file).st_size,
+                    "file_path": "".join(os.path.realpath(file)).replace(
+                        os.path.basename(p=file), "").replace("/home/", "").replace(os.getlogin(), ""),
+                    "file_name": os.path.basename(p=file),
+                    "is_starred": False,
+                    "access_list": [
+                        {
+                            "email": self.user["email"],
+                            "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
+                        }
+                    ],
+                    "user": {
+                        "email": self.user["email"],
+                        "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
+                    },
+                } """
 
-                    if file not in cloud_files and os.path.isfile(file):
+                self.queue.put(item=data)
 
-                        db.update(name=file, version=str("first"))
-                        change_kind = SyncEvent(2)
-                    else:
-                        change_kind = SyncEvent(3)
-                else:
-                    print("No")
-                    change_kind = SyncEvent(4)
+        self.queue.join()
 
-                indexer.event_handler(change_kind)
-                print("Monitoring " + sync_folder_path)
+    def _schedule(self):
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(message)s",
+            datefmt="%Y-%m-%d %H:%M:%S",
+        )
+        path = self.sync_folder
+        event_handler = LoggingEventHandler()  # event handler
 
-                sleep(1)  # wait a sec!
+        event_handler.on_created = self._on_created
+        event_handler.on_deleted = self._on_deleted
+        event_handler.on_modified = self._on_modified
+        event_handler.on_moved = self.on_file_moved
 
-            sleep(1)
+        self.observer.on_thread_start = self._on_thread_start
+        self.observer.schedule(event_handler=event_handler, path=path, recursive=True)
 
+    def _start(self):
+        self.observer.start()  # star the observer thread
+        try:
+            while True:
+                time.sleep(1)
+        except KeyboardInterrupt:
+            self.observer.stop()
 
-class SyncRemote(Thread):
-    def _sync_file_remote(self):
-
-        db = DBConnector()
-        user = Auth().get_user_info(token=db.fetch_logins()[0][-1])
-        while True:
-            files_local = [file_db[1] for file_db in db.fetch_files()]
-
-            cloud_files = [
-                file.key.split("/")[-1]
-                for file in bucket.objects.filter(
-                    Prefix="sync_folders/" + user["sync_folder_name"] + "/"
-                )
-            ]
-
-            for remote_file in cloud_files:
-
-                if remote_file in files_local:
-                    pass
-                else:
-                    if remote_file != "":
-                        pass
-                        print("I am going to download this " + remote_file)
-                        self._download_thread(key=remote_file)
-
-                sleep(1)  # wait a sec!
-
-    def run(self):
-        self._sync_file_remote()
-
-    def _download(self, key):
-        for i in range(100):
-            print("Downloading {0}".format(key), i, end=" ")
-
-    def _download_thread(self, key):
-        thread = Thread(target=self._download, args=[key])
-        thread.run()
+        self.observer.join()

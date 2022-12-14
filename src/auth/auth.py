@@ -4,6 +4,7 @@ import uuid
 import sys
 from config.db import DBConnector
 from models.login import Login
+from models.user import User
 
 USER_POOL_ID = "us-east-2_M1Eh4E3MA"  # os.getenv("USER_POOL_ID")
 CLIENT_ID = "4rmavund0ekutqevh36li6ehta"  # os.getenv("DESKTOP_CLIENT_ID")
@@ -30,7 +31,6 @@ class Auth:
 
     def get_session(self):
         try:
-
             return Services.cognito_id.get_id(IdentityPoolId=IDENTITY_POOL_ID)
         except Exception as e:
             return e.args
@@ -48,6 +48,31 @@ class Auth:
                         for attr in user["UserAttributes"]
                         if attr["Name"] == "name"
                     ][0],
+                    "email": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "email"
+                    ][0],
+                    "limit_quota": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "custom:limit_quota"
+                    ][0],
+                    "quota_used": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "custom:quota_used"
+                    ],
+                    "desktop": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "custom:desktop"
+                    ][0],
+                    "username": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "sub"
+                    ][0],
                 }
         except Exception as e:
             print(e)
@@ -60,3 +85,9 @@ class Auth:
         login_details = Login(username=user["Username"], access_token=token)
 
         print("Login ", db.create_login(login_details))
+
+    def signup(self, user: User):
+        """"
+            Singup new user
+        """ ""
+        return user
