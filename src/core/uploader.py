@@ -11,7 +11,7 @@ import os
 from config.db import DBConnector
 from models.local_file import LocalFile
 
-update_url = "http://127.0.0.1:8000/user/update_item"
+update_url = "http://192.168.158.17:8000/user/update_item"
 
 
 class Uploader(Thread):
@@ -78,8 +78,7 @@ class Uploader(Thread):
                         filename=self.local_sync_folder + file_upload
                     ),
                 ),
-            
-            print(response)
+
         except ClientError as e:
             logging.error(e)
             return False

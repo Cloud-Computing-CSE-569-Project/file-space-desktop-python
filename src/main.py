@@ -25,7 +25,7 @@ def create_folder(sync_folder: str, token: str):
         try:
 
             Services.s3.Bucket(Services.bucket_name).put_object(
-                Key="sync_folders/" + sync_folder + "/"
+                Key=sync_folder + "/"
             )
             print("Folder Created on the Cloud")
 
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     if is_logged:
         token = logins[0][-1]
         user_details = Auth().get_user_info(token=token)
-        sync_folder_name_cloud = "public/sync_folders"
+        sync_folder_name_cloud = "protected/{0}/sync_folders".format(user_details["cog_id"])
         print("Welcome " + user_details["name"])
 
         my_watcher = Watcher(

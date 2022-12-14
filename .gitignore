@@ -9,7 +9,9 @@
 /src/schemas/__pycache__
 /src/models/__pycache__
 /src/auth/__pycache__
+/src/auth/.env
 /src/config/__pycache__
+/src/config/.env
 /src/core/__pycache__
 /tests/__init__.py
 /src/__init__.py
@@ -17,5 +19,6 @@
 /src/sync.py
 /files_info.txt
 /sync.py
+/.env
 /src/test.py
 
