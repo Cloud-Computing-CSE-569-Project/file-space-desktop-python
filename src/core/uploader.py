@@ -67,8 +67,7 @@ class Uploader(Thread):
         try:
             file_upload = os.path.join(file["file_path"], file["file_name"])
 
-            response = (
-                s3.upload_file(
+            response = s3.upload_file(
                     Filename=self.local_sync_folder + file_upload,
                     Key=self.sync_folder
                     + self.user["username"]
@@ -79,10 +78,8 @@ class Uploader(Thread):
                         filename=self.local_sync_folder + file_upload
                     ),
                 ),
-            )
-
+            
             print(response)
-
         except ClientError as e:
             logging.error(e)
             return False
