@@ -22,8 +22,6 @@ user_name = os.getlogin()
 sync_folder_name = "My Space"
 sync_folder_path = "/home/" + user_name + "/" + sync_folder_name
 
-db = DBConnector()
-
 
 class Watcher(object):
     def __init__(self, sync_folder: str, sync_folder_remote: str, user):
@@ -32,6 +30,7 @@ class Watcher(object):
         self.observer = Observer()
         self.queue = Queue()
         self.user = user
+        
 
     def sync(self):
         """
@@ -46,7 +45,7 @@ class Watcher(object):
         File has been created. As it can be a newly downloaded the file, we need to make sure to add to local DB if it is not there and then call upload to storage.
         """
 
-        print(event.key)
+        print(event)
 
     def _on_deleted(self, event: FileDeletedEvent):
         """
@@ -61,11 +60,11 @@ class Watcher(object):
         """
         File is already in DB and has been changed, compute the file diff and upload only what have changed.
         """
-
+        db = DBConnector()
         # if this file is not yet on d
         if (
             db.ensure_file_exists(file_path=event.src_path)
-            and event.src_path != "My Space"
+            and event.src_path != "/My Space" or event.src_path != "My S"
         ):
             # update file to cloud
             pass
@@ -99,10 +98,10 @@ class Watcher(object):
     def _push(self, worker: Thread):
 
         print("I just started - Checking if there are things to update!")
-
+        db = DBConnector()
         for file in DirectorySnapshot(path=self.sync_folder, recursive=True).paths:
 
-            if db.ensure_file_exists(file_path=file) or os.path.samefile(
+            if  db.ensure_file_exists(file_path=file) or os.path.samefile(
                 self.sync_folder, file
             ):
                 continue

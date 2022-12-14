@@ -33,12 +33,6 @@ class Auth:
         except Exception as e:
             return e.args[-1]
 
-    def get_session(self):
-        try:
-            return Services.cognito_id.get_id(IdentityPoolId=IDENTITY_POOL_ID)
-        except Exception as e:
-            return e.args
-
     def get_user_info(self, token):
 
         try:
@@ -77,6 +71,12 @@ class Auth:
                         for attr in user["UserAttributes"]
                         if attr["Name"] == "sub"
                     ][0],
+                    "cog_id": [
+                        attr["Value"]
+                        for attr in user["UserAttributes"]
+                        if attr["Name"] == "custom:cog_id"
+                    ][0],
+
                 }
         except Exception as e:
             print(e)

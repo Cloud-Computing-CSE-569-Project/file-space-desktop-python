@@ -41,12 +41,12 @@ class FileParser:
             "access_list": [
                 {
                     "email": user["email"],
-                    "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
+                    "id": user["cog_id"],
                 }
             ],
             "user": {
                 "email": user["email"],
-                "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
+                "id": user["cog_id"],
             },
         }
         return data
