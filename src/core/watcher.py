@@ -115,33 +115,6 @@ class Watcher(object):
                 worker.start()
 
                 data = FileParser().file_to_object(file=file, user=self.user)
-                """   is_folder = os.path.isdir(file)
-
-                data = {
-                    "is_folder": is_folder,
-                    "file_extension": "folder"
-                    if is_folder == True
-                    else os.path.splitext(p=file)[-1],
-                    "modified": datetime.fromtimestamp(
-                        os.stat(file).st_mtime, tz=timezone.utc
-                    ).strftime("%Y-%m-%d-%H:%M"),
-                    "file_size": os.stat(file).st_size,
-                    "file_path": "".join(os.path.realpath(file)).replace(
-                        os.path.basename(p=file), "").replace("/home/", "").replace(os.getlogin(), ""),
-                    "file_name": os.path.basename(p=file),
-                    "is_starred": False,
-                    "access_list": [
-                        {
-                            "email": self.user["email"],
-                            "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
-                        }
-                    ],
-                    "user": {
-                        "email": self.user["email"],
-                        "id": "us-east-2:85fc0e9a-558b-431a-acc4-7b80aeafa60b",
-                    },
-                } """
-
                 self.queue.put(item=data)
 
         self.queue.join()

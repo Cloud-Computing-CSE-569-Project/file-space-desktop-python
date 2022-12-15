@@ -57,7 +57,6 @@ def show_login_menu():
 
     token = auth.login(email=email, password=password)
 
-    print(token)
     if token == "":
         return False
     return True
@@ -73,6 +72,8 @@ if __name__ == "__main__":
 
     while not is_logged:
         is_logged = show_login_menu()
+        print("You Are logged!")
+        os.system("exit")
 
     if is_logged:
         token = logins[0][-1]
