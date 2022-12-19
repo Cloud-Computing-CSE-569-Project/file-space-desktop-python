@@ -55,8 +55,10 @@ class DBConnector:
 
     def update(self, file: LocalFile):
         cursor = self.connection.cursor()
+
+        print(file.dict)
         cursor.execute(
-            """Insert into Files(object_id, file_name, is_folder, last_modified, file_path, version) values('{0}', {1}', '{2}', '{3}', '{4}', '{5}')""".format(
+            """Insert into Files(object_id, file_name, is_folder, last_modified, file_path, version) values('{0}', '{1}', '{2}', '{3}', '{4}', '{5}')""".format(
                 file.object_id,
                 file.file_name,
                 file.is_folder,

@@ -4,7 +4,7 @@ from config.db import DBConnector
 
 class Indexer:
     def __init__(self) -> None:
-        self.db = DBConnector()
+       pass
 
     def event_update(self):
         print("Something updated")

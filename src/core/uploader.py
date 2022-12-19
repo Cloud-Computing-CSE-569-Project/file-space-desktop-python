@@ -10,8 +10,11 @@ from utlis.process_percentage import ProgressPercentage
 import os
 from config.db import DBConnector
 from models.local_file import LocalFile
+from db.db import database, engine
+from utlis.crud import DatabaseCrud
+from utlis.parser import FileParser
 
-update_url = "http://192.168.158.17:8000/user/update_item"
+update_url = "http://18.188.244.88/user/update_item"
 
 
 class Uploader(Thread):
@@ -24,12 +27,17 @@ class Uploader(Thread):
 
     def run(self) -> None:
         while True:
+            file_request = {}
             my_file = self.queue.get()
+
             try:
-                db = DBConnector()
+                db = DatabaseCrud()
                 if self._upload(file=my_file):
                     # send response to the queue
-                    response = requests.post(update_url, json=my_file)
+                    file_request = FileParser().dict_to_json_file(my_file)
+                    file_request["file_path"] = os.path.join("/sync_folders", os.getlogin() + "/")
+
+                    response = requests.post(update_url, json=file_request)
                     if response.status_code == 200:
                         ##upate local DB
                         object_id = json.loads(response.text)["object_id"]
@@ -43,7 +51,6 @@ class Uploader(Thread):
                                 is_folder=my_file["is_folder"],
                                 last_modified=my_file["modified"],
                                 file_path=my_file["file_path"]
-                                + "/"
                                 + my_file["file_name"],
                                 version=ver,
                                 file_name=my_file["file_name"],
@@ -63,22 +70,18 @@ class Uploader(Thread):
     def _upload(self, file: dict) -> bool:
         # upload file to amazon s3
         s3 = Services.s3_bucket
-        flag = False
+     
         try:
             file_upload = os.path.join(file["file_path"], file["file_name"])
 
             response = s3.upload_file(
                     Filename=self.local_sync_folder + file_upload,
-                    Key=self.sync_folder
-                    + self.user["username"]
-                    + "/".join(
-                        file_upload.split("/{0}/{1}/".format("home", os.getlogin()))
-                    ),
+                    Key=self.sync_folder + "/" + file["file_name"],
                     Callback=ProgressPercentage(
                         filename=self.local_sync_folder + file_upload
                     ),
-                ),
-
+                )
+            
         except ClientError as e:
             logging.error(e)
             return False

@@ -2,12 +2,12 @@ import os
 from config.aws import Services
 import uuid
 import sys
-from config.db import DBConnector
 from models.login import Login
 from models.user import User
 from pathlib import Path
 from dotenv import load_dotenv
-
+from db.db import engine, logins
+from sqlalchemy import text
 load_dotenv()
 
 USER_POOL_ID = os.getenv("USER_POOL_ID")
@@ -82,13 +82,15 @@ class Auth:
             print(e)
 
     def _save_login(self, token):
-        db = DBConnector()
 
         user = Services.cognito.get_user(AccessToken=token)
 
         login_details = Login(username=user["Username"], access_token=token)
-
-        print("Login ", db.create_login(login_details))
+        
+        query = """ Insert into logins(username, isLogged, accessToken) values ('{0}','{1}', '{2}')""".format(
+            login_details.username, login_details.is_logged, login_details.access_token
+        )
+        engine.execute(text(query))
 
     def signup(self, user: User):
         """"

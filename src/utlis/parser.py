@@ -50,3 +50,17 @@ class FileParser:
             },
         }
         return data
+
+    def dict_to_json_file(self, d:dict):
+        data = {
+            "is_folder": d["is_folder"],
+            "file_extension": d["file_extension"],
+            "modified": d["modified"],
+            "file_size": d["file_size"],
+            "file_path": d["file_path"],
+            "file_name": d["file_name"],
+            "is_starred": d["is_starred"],
+            "access_list": d["access_list"],
+            "user": d["user"]
+        }
+        return data

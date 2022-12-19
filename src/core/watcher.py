@@ -12,6 +12,8 @@ import uuid
 from watchdog.observers import (
     Observer,
 )
+from utlis.crud import DatabaseCrud
+
 from watchdog.events import *
 from watchdog.events import (
     LoggingEventHandler,
@@ -45,7 +47,20 @@ class Watcher(object):
         File has been created. As it can be a newly downloaded the file, we need to make sure to add to local DB if it is not there and then call upload to storage.
         """
 
-        print(event)
+        db = DatabaseCrud()
+
+        if db.ensure_file_exists(file_path=event.src_path) and event.src_path != "/My Space":
+            print("Ignoring")
+        else:
+            worker = Uploader(
+                sync_folder=self.sync_folder_remote, queue=self.queue, user=self.user
+            )
+            worker.daemon = True
+            worker.start()
+            data = FileParser().file_to_object(file=event.src_path, user=self.user)
+
+            self.queue.put(item=data)
+        self.queue.join() 
 
     def _on_deleted(self, event: FileDeletedEvent):
         """
@@ -60,11 +75,11 @@ class Watcher(object):
         """
         File is already in DB and has been changed, compute the file diff and upload only what have changed.
         """
-        db = DBConnector()
+        db = DatabaseCrud()
         # if this file is not yet on d
         if (
             db.ensure_file_exists(file_path=event.src_path)
-            and event.src_path != "/My Space" or event.src_path != "My S"
+            and event.src_path != "/My Space" or event.src_path != "My Space"
         ):
             # update file to cloud
             pass
@@ -98,7 +113,7 @@ class Watcher(object):
     def _push(self, worker: Thread):
 
         print("I just started - Checking if there are things to update!")
-        db = DBConnector()
+        db = DatabaseCrud()
         for file in DirectorySnapshot(path=self.sync_folder, recursive=True).paths:
 
             if  db.ensure_file_exists(file_path=file) or os.path.samefile(
