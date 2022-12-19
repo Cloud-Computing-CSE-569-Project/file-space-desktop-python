@@ -116,7 +116,9 @@ class Watcher(object):
         db = DatabaseCrud()
         for file in DirectorySnapshot(path=self.sync_folder, recursive=True).paths:
 
-            if  db.ensure_file_exists(file_path=file) or os.path.samefile(
+            if  db.ensure_file_exists(file_path="".join(os.path.realpath(file))
+            .replace("/home/", "")
+            .replace(os.getlogin(), "")) or os.path.samefile(
                 self.sync_folder, file
             ):
                 continue
