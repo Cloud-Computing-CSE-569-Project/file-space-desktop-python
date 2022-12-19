@@ -5,7 +5,7 @@ from datetime import timezone, datetime
 import logging
 import os
 from utlis.parser import FileParser
-from config.db import DBConnector
+
 from threading import Thread
 from queue import Queue
 import uuid
@@ -66,7 +66,13 @@ class Watcher(object):
         """
         If the file has been deleted, the delete from the metadata and consequently from the Cloud storage
         """
-        print(event)
+   
+
+        db = DatabaseCrud()
+
+        db.delete(file= FileParser().get_name(event.src_path))
+
+        print(event.src_path, " Deleted")
 
     def on_file_moved(self, event: FileMovedEvent):
         pass

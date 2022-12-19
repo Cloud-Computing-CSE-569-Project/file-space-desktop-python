@@ -1,7 +1,7 @@
 from auth.auth import Auth
 import os
 from config.aws import Services
-from config.db import DBConnector
+
 from core.watcher import Watcher
 from db.db import engine, logins
 from sqlalchemy import text

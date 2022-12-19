@@ -32,3 +32,7 @@ class DatabaseCrud:
                 file.version,
             ))
         result = engine.execute( query )
+
+    def delete(self, file:str):
+        query = text(""" delete from files where file_name = '{0}'""".format(file))
+        result = engine.execute(query)

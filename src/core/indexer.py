@@ -1,5 +1,5 @@
 from models.event import SyncEvent
-from config.db import DBConnector
+
 
 
 class Indexer:
