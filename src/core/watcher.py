@@ -70,7 +70,8 @@ class Watcher(object):
 
         db = DatabaseCrud()
 
-        db.delete(file= FileParser().get_name(event.src_path))
+        print(db.select("""select * from files where file_path = '{0}'""".format(event.src_path)))
+        #db.delete(file= FileParser().get_name(event.src_path))
 
         print(event.src_path, " Deleted")
 
